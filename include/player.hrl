@@ -21,18 +21,14 @@
 %%%-------------------------------------------------------------------
 -author("Alex Sarapulov").
 
--record(location, {
-    x                       :: integer(),
-    y                       :: integer()
-}).
-
 -record(player, {
     id                      :: player_id(),
     name                    :: binary(),
-    location                :: location()
+    attack                  :: integer(),
+    defence                 :: integer(),
+    hp                      :: integer()
 }).
 
--type location() :: #location{}.
 -type player() :: #player{}.
 -type player_id() :: binary().
 

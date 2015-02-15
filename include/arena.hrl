@@ -21,12 +21,20 @@
 %%%-------------------------------------------------------------------
 -author("Alex Sarapulov").
 
+-record(location, {
+    x = 0           :: integer(),
+    y = 0           :: integer()
+}).
+
+
 -record(arena, {
     id                      :: arena_id(),
     name                    :: binary(),
-    max_players = 2         :: integer()
+    max_players             :: integer(),
+    size                    :: arena_size()
 }).
 
+-type location() :: #location{}.
 -type arena() :: #arena{}.
 -type arena_id() :: binary().
-
+-type arena_size() :: small | medium | big.
