@@ -29,6 +29,7 @@
 %% API
 -export([start_link/2]).
 -export([status/1]).
+-export([join_arena/2, leave_arena/2]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -39,18 +40,29 @@
     code_change/3]).
 
 -record(state, {
-    data :: #player{}
+    data    :: player(),
+    arena   :: pid() | undefined
 }).
+
+-type state() :: #state{}.
 
 %%%===================================================================
 %%% API
 %%%===================================================================
 
--spec status(pid()) -> #state{} | {error, Reason::term()}.
+-spec status(pid()) -> state() | {error, term()}.
 status(Player) ->
     gen_server:call(Player, status).
 
--spec start_link(binary(), #player{}) -> {ok, pid()} | {error, Reason::term()}.
+-spec join_arena(pid(), pid()) -> ok | {error, term()}.
+join_arena(Player, Arena) ->
+    gen_server:call(Player, {join_arena, Arena}).
+
+-spec leave_arena(pid(), pid()) -> ok | {error, term()}.
+leave_arena(Player, Arena) ->
+    gen_server:call(Player, {leave_arena, Arena}).
+
+-spec start_link(binary(), player()) -> {ok, pid()} | {error, term()}.
 start_link(Id, Data) ->
     gen_server:start_link({local, Id}, ?MODULE, [Data], []).
 
@@ -58,13 +70,27 @@ start_link(Id, Data) ->
 %%% gen_server callbacks
 %%%===================================================================
 
--spec init([#player{}]) -> {ok, #state{}}.
+-spec init([player()]) -> {ok, state()}.
 init([Data]) ->
     {ok, #state{data = Data}}.
 
+-spec handle_call(any(), pid(), state()) -> {reply, {error, term()} | term() | state(), state()}.
 % status
 handle_call(status, _From, State) ->
     {reply, State, State};
+
+% arena
+handle_call({join_arena, Arena}, _From, State) ->
+    {Res, NewState} = case State#state.arena of
+        undefined -> apply_joining_arena(Arena, State);
+        {error, Reason} -> {{error, Reason}, State};
+        _Pid -> {{error, <<"movement_between_arenas">>}, State}
+    end,
+    {reply, Res, NewState};
+
+handle_call({leave_arena, Arena}, _From, State) ->
+    {Res, NewState} = apply_leaving_arena(Arena, State),
+    {reply, Res, NewState};
 
 % others
 handle_call(_Request, _From, State) ->
@@ -81,3 +107,22 @@ terminate(_Reason, _State) ->
 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
+
+%%%===================================================================
+%%% Internal functions
+%%%===================================================================
+
+-spec apply_joining_arena(pid(), state()) -> {ok | {error, term()}, state()}.
+apply_joining_arena(Arena, State) ->
+    case hydro_arena:join(self(), Arena) of
+        ok -> {ok, State#state{arena = Arena}};
+        {error, Reason} -> {{error, Reason}, State}
+    end.
+
+-spec apply_leaving_arena(pid(), state()) -> {ok | {error, term()}, state()}.
+apply_leaving_arena(Arena, State) ->
+    case hydro_arena:leave(self(), Arena) of
+        ok -> {ok, State#state{arena = undefined}};
+        {error, Reason} -> {{error, Reason}, State}
+    end.
+

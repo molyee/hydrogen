@@ -22,13 +22,17 @@
 -author("Alex Sarapulov").
 
 -record(location, {
-    area                    :: pid(),
     x                       :: integer(),
     y                       :: integer()
 }).
 
 -record(player, {
-    id                      :: binary(),
+    id                      :: player_id(),
     name                    :: binary(),
-    location = undefined    :: undefined | pid() | #location{}
+    location                :: location()
 }).
+
+-type location() :: #location{}.
+-type player() :: #player{}.
+-type player_id() :: binary().
+

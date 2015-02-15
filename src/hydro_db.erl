@@ -19,22 +19,66 @@
 %%% OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %%% SOFTWARE.
 %%%-------------------------------------------------------------------
--module(hydro_app).
+-module(hydro_db).
 -author("Alex Sarapulov").
 
--behaviour(application).
+-include("arena.hrl").
+-include("player.hrl").
 
-%% Application callbacks
--export([start/2, stop/1]).
+%% API
+-export([init/0]).
+-export([create_player/1]).
+-export([create_arena/1]).
 
 %%%===================================================================
-%%% Application callbacks
+%%% API
 %%%===================================================================
 
--spec start(_StartType, _StartArgs) -> {ok, pid()}.
-start(_StartType, _StartArgs) ->
-    hydro_sup:start_link().
-
--spec stop(_) -> ok.
-stop(_State) ->
+-spec init() -> ok | {error, term()}.
+init() ->
     ok.
+
+-spec create_player(binary()) -> {player_id(), player()} | {error, term()}.
+create_player(Name) ->
+    Player = gen_player(Name),
+    {Player#player.id, Player}.
+
+-spec create_arena(term()) -> {arena_id(), arena()} | {error, term()}.
+create_arena({Name, MaxPlayers}) ->
+    Arena = gen_arena(Name),
+    {Arena#arena.id, Arena#arena{max_players = MaxPlayers}};
+
+create_arena(Name) ->
+    Arena = gen_arena(Name),
+    {Arena#arena.id, Arena}.
+
+%%%===================================================================
+%%% Internal functions
+%%%===================================================================
+
+% generate player
+-spec gen_player(binary()) -> player().
+gen_player(Name) -> #player{
+        id = gen_unique_player_id(Name),
+        name = Name,
+        location = gen_start_location()
+    }.
+
+-spec gen_unique_player_id(binary()) -> player_id().
+gen_unique_player_id(Name) ->
+    Name.
+
+-spec gen_start_location() -> location().
+gen_start_location() ->
+    #location{x = 0, y = 0}.
+
+% generate arena
+-spec gen_arena(binary()) -> arena().
+gen_arena(Name) -> #arena{
+        id = gen_unique_arena_id(Name),
+        name = Name
+    }.
+
+-spec gen_unique_arena_id(binary()) -> arena_id().
+gen_unique_arena_id(Name) ->
+    Name.

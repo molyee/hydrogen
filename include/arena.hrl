@@ -22,7 +22,11 @@
 -author("Alex Sarapulov").
 
 -record(arena, {
-    id                      :: binary(),
+    id                      :: arena_id(),
     name                    :: binary(),
     max_players = 2         :: integer()
 }).
+
+-type arena() :: #arena{}.
+-type arena_id() :: binary().
+

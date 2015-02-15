@@ -40,27 +40,29 @@
     code_change/3]).
 
 -record(state, {
-    data            :: #arena{},
+    data            :: arena(),
     players = []    :: list()
 }).
+
+-type state() :: #state{}.
 
 %%%===================================================================
 %%% API
 %%%===================================================================
 
--spec status(pid()) -> #state{}.
+-spec status(pid()) -> state().
 status(Arena) ->
     gen_server:call(Arena, status).
 
--spec join(pid(), pid()) -> ok | {error, Reason::term()}.
+-spec join(pid(), pid()) -> ok | {error, term()}.
 join(Player, Arena) ->
     gen_server:call(Arena, {join, Player}).
 
--spec leave(pid(), pid()) -> ok | {error, Reason::term()}.
+-spec leave(pid(), pid()) -> ok | {error, term()}.
 leave(Player, Arena) ->
     gen_server:call(Arena, {leave, Player}).
 
--spec start_link(binary(), #arena{}) -> {ok, pid()}.
+-spec start_link(binary(), arena()) -> {ok, pid()}.
 start_link(Id, Data) ->
     gen_server:start_link({local, Id}, ?MODULE, [Data], []).
 
@@ -68,27 +70,24 @@ start_link(Id, Data) ->
 %%% gen_server callbacks
 %%%===================================================================
 
--spec init([#arena{}]) -> {ok, #state{}}.
+-spec init([arena()]) -> {ok, state()}.
 init([Data]) ->
     {ok, #state{data = Data}}.
 
+-spec handle_call(term(), pid(), state()) -> {reply, {error, term()} | term() | state(), state()}.
 % status
 handle_call(status, _From, State) ->
     {reply, State, State};
 
 % join
 handle_call({join, Player}, _From, State) ->
-    case is_member(Player, State) of
-        true -> {reply, {error, badarg}, State};
-        false -> {reply, ok, add_player(Player, State)}
-    end;
+    {Res, NewState} = add_player(Player, State),
+    {reply, Res, NewState};
 
 % leave
 handle_call({leave, Player}, _From, State) ->
-    case is_member(Player, State) of
-        true -> {reply, ok, remove_player(Player, State)};
-        false -> {reply, {error, badarg}, State}
-    end;
+    {Res, NewState} = remove_player(Player, State),
+    {reply, Res, NewState};
 
 % others
 handle_call(_Request, _From, State) ->
@@ -110,14 +109,17 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 
--spec is_member(pid(), #state{}) -> boolean().
-is_member(Player, #state{players = Players}) ->
-    lists:member(Player, Players).
+-spec add_player(pid(), state()) -> {ok | {error, term()}, state()}.
+add_player(Player, State = #state{data = Arena, players = Players}) ->
+    IsMember = lists:member(Player, Players),
+    if
+        IsMember ->
+            {{error, <<"player_already_exists">>}, State};
+        length(Players) >= Arena#arena.max_players ->
+            {{error, <<"max_players_limit">>}, State};
+        true -> {ok, State#state{players = [Player|Players]}}
+    end.
 
--spec add_player(pid(), #state{}) -> #state{}.
-add_player(Player, State = #state{players = Players}) ->
-    State#state{players = [Player|Players]}.
-
--spec remove_player(pid(), #state{}) -> #state{}.
+-spec remove_player(pid(), state()) -> state().
 remove_player(Player, State = #state{players = Players}) ->
-    State#state{players = lists:delete(Player, Players)}.
+    {ok, State#state{players = lists:delete(Player, Players)}}.

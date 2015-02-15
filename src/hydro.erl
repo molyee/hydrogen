@@ -22,31 +22,27 @@
 -module(hydro).
 -author("Alex Sarapulov").
 
--include("arena.hrl").
--include("player.hrl").
-
 %% API
--export([run/0]).
+-export([up/0]).
 -export([create_player/1]).
 -export([create_arena/1]).
 
-%%-type identifier() :: string().
-
--spec run() -> {ok, [atom()]}.
-run() ->
+-spec up() -> ok | {error, term()}.
+up() ->
     application:load(hydro),
-    application:start(hydro_app).
+    application:start(hydro_app),
+    hydro_db:init().
 
--spec create_player(binary()) -> {ok, pid()} | {error, Reason::term()}.
-create_player(Name) ->
-    Player = #player{
-        name = Name
-    },
-    hydro_player_sup:start_player(Name, Player).
+-spec create_player(binary()) -> {ok, pid()} | {error, term()}.
+create_player(Args) ->
+    case hydro_db:create_player(Args) of
+        {error, Reason} -> {error, Reason};
+        {Id, Player} -> hydro_player_sup:start_player(Id, Player)
+    end.
 
--spec create_arena(binary()) -> {ok, pid()} | {error, Reason::term()}.
-create_arena(Name) ->
-    Arena = #arena{
-        name = Name
-    },
-    hydro_arena_sup:start_arena(Name, Arena).
+-spec create_arena(binary()) -> {ok, pid()} | {error, term()}.
+create_arena(Args) ->
+    case hydro_db:create_arena(Args) of
+        {error, Reason} -> {error, Reason};
+        {Id, Arena} -> hydro_arena_sup:start_arena(Id, Arena)
+    end.
