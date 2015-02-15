@@ -30,13 +30,13 @@
 %% Supervisor callbacks
 -export([init/1]).
 
--define(CHILD(Module, Type),
-    {Module, {Module, start_link, []}, permanent, 2000, Type}).
+-define(CHILD(Mod), {Mod, {Mod, start_link, []}, permanent, 2000, supervisor, [Mod]}).
 
 %%%===================================================================
 %%% API functions
 %%%===================================================================
 
+-spec start_link() -> {ok, pid()}.
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
@@ -44,7 +44,9 @@ start_link() ->
 %%% Supervisor callbacks
 %%%===================================================================
 
+-spec init([]) -> {ok, {{supervisor:strategy(), 2, 10}, list()}}.
 init([]) ->
     {ok, {{one_for_one, 2, 10}, [
-        ?CHILD(hydro_player_sup, supervisor)
+        ?CHILD(hydro_player_sup),
+        ?CHILD(hydro_arena_sup)
     ]}}.

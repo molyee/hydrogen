@@ -20,7 +20,7 @@
 %%% SOFTWARE.
 %%%-------------------------------------------------------------------
 {application, hydro_app, [
-    {description, "Game engine"},
+    {description, "Hydrogen engine"},
     {vsn, git},
     {registered, []},
     {applications, [

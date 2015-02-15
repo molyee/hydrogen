@@ -24,15 +24,11 @@
 
 -behaviour(gen_server).
 
+-include("player.hrl").
+
 %% API
 -export([start_link/2]).
 -export([status/1]).
-
--include("player.hrl").
--record(state, {
-    id :: string(),
-    data :: #player{}
-}).
 
 %% gen_server callbacks
 -export([init/1,
@@ -42,26 +38,35 @@
     terminate/2,
     code_change/3]).
 
+-record(state, {
+    data :: #player{}
+}).
+
 %%%===================================================================
 %%% API
 %%%===================================================================
 
+-spec status(pid()) -> #state{} | {error, Reason::term()}.
 status(Player) ->
-    get_server:call(Player, status).
+    gen_server:call(Player, status).
 
+-spec start_link(binary(), #player{}) -> {ok, pid()} | {error, Reason::term()}.
 start_link(Id, Data) ->
-    gen_server:start_link({global, "player@"++Id}, ?MODULE, [Id, Data], []).
+    gen_server:start_link({local, Id}, ?MODULE, [Data], []).
 
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
 
-init([Id, Data]) ->
-    {ok, #state{id = Id, data = Data}}.
+-spec init([#player{}]) -> {ok, #state{}}.
+init([Data]) ->
+    {ok, #state{data = Data}}.
 
+% status
 handle_call(status, _From, State) ->
     {reply, State, State};
 
+% others
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 

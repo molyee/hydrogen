@@ -35,9 +35,11 @@
 %%% API functions
 %%%===================================================================
 
+-spec start_player(binary(), binary()) -> {ok, pid()}.
 start_player(PlayerId, PlayerData) ->
     supervisor:start_child(?MODULE, [PlayerId, PlayerData]).
 
+-spec start_link() -> {ok, pid()}.
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
@@ -45,8 +47,8 @@ start_link() ->
 %%% Supervisor callbacks
 %%%===================================================================
 
+-spec init([]) -> {ok, {{supervisor:strategy(), 2, 50}, [supervisor:child_spec()]}}.
 init([]) ->
     {ok, {{simple_one_for_one, 2, 50}, [
-        {?MODULE, {hydro_player, start_link, []},
-            permanent, 1000, worker, [hydro_player]}
+        {?MODULE, {hydro_player, start_link, []}, permanent, 5000, worker, [hydro_player]}
     ]}}.

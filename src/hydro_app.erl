@@ -25,14 +25,19 @@
 -behaviour(application).
 
 %% Application callbacks
--export([start/2, stop/1]).
+-export([start/0, start/2, stop/1]).
 
 %%%===================================================================
 %%% Application callbacks
 %%%===================================================================
 
+start() ->
+    start(hydro, []).
+
+-spec start(_StartType, _StartArgs) -> {ok, pid()}.
 start(_StartType, _StartArgs) ->
     hydro_sup:start_link().
 
+-spec stop(_) -> ok.
 stop(_State) ->
     ok.

@@ -28,7 +28,7 @@
 }).
 
 -record(player, {
-    id                      :: string(),
-    name                    :: string(),
+    id                      :: binary(),
+    name                    :: binary(),
     location = undefined    :: undefined | pid() | #location{}
 }).

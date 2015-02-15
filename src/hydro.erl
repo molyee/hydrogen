@@ -26,20 +26,25 @@
 -include("player.hrl").
 
 %% API
--export([start/0]).
+-export([run/0]).
 -export([create_player/1]).
 -export([create_arena/1]).
 
-start() ->
-    random:seed(now()),
-    application:ensure_all_started(hydro).
+%%-type identifier() :: string().
 
+-spec run() -> {ok, [atom()]}.
+run() ->
+    application:load(hydro),
+    application:start(hydro_app).
+
+-spec create_player(binary()) -> {ok, pid()} | {error, Reason::term()}.
 create_player(Name) ->
     Player = #player{
         name = Name
     },
     hydro_player_sup:start_player(Name, Player).
 
+-spec create_arena(binary()) -> {ok, pid()} | {error, Reason::term()}.
 create_arena(Name) ->
     Arena = #arena{
         name = Name
