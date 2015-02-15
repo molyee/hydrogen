@@ -96,15 +96,19 @@ handle_call({leave_arena, Arena}, _From, State) ->
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 
+-spec handle_cast(term(), state()) -> {noreply, state()}.
 handle_cast(_Request, State) ->
     {noreply, State}.
 
+-spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info(_Info, State) ->
     {noreply, State}.
 
+-spec terminate(term(), state()) -> ok.
 terminate(_Reason, _State) ->
     ok.
 
+-spec code_change(term(), state(), any()) -> {ok, state()}.
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
